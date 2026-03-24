@@ -32,7 +32,7 @@ export function CreateCourseForm() {
         id: Date.now(),
         name: "Nuevo Grupo",
         weight: 0,
-        components: [createComponent("custom", 0)],
+        components: [createComponent(0)],
         aggregation: "AVERAGE",
       },
     ]);

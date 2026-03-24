@@ -12,30 +12,24 @@ export const CourseGroup = ({
     data: GradeGroup[] | ((data: GradeGroup[]) => GradeGroup[])
   ) => void;
 }) => {
-  const updateGroup = (gId: string, patch: Partial<GradeGroup>) =>
+  const updateGroup = (gId: number, patch: Partial<GradeGroup>) =>
     setGroups((gs) => gs.map((g) => (g.id === gId ? { ...g, ...patch } : g)));
 
-  const addComponentToGroup = (gId: string) =>
+  const addComponentToGroup = (gId: number) =>
     setGroups((gs) =>
       gs.map((g) => {
         if (g.id !== gId) return g;
         return {
           ...g,
-          components: [
-            ...g.components,
-            createComponent(
-              g.components[0]?.type || "custom",
-              g.components.length
-            ),
-          ],
+          components: [...g.components, createComponent(g.components.length)],
         };
       })
     );
 
-  const removeGroup = (gId: string) =>
+  const removeGroup = (gId: number) =>
     setGroups((gs) => gs.filter((g) => g.id !== gId));
 
-  const removeComponent = (gId: string, cId: string) =>
+  const removeComponent = (gId: number, cId: number) =>
     setGroups((gs) =>
       gs.map((g) => {
         if (g.id !== gId) return g;

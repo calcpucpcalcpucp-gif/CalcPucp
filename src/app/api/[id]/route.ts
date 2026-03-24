@@ -1,47 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
-import {
-  removeCourseTemplate,
-  updateCourseTemplateStructure,
-} from "@/services/course.service";
 
-export async function PUT(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+type Context = {
+  params: Promise<{ id: string }>;
+};
+
+export async function PUT(req: NextRequest, context: Context) {
   try {
-    const id = Number(params.id);
-    const body = await req.json();
+    const { id } = await context.params;
 
-    if (isNaN(id)) {
-      return NextResponse.json({ error: "ID inválido" }, { status: 400 });
-    }
-    const updatedTemplate = await updateCourseTemplateStructure(body);
-    return NextResponse.json(updatedTemplate, { status: 200 });
+    const data = await req.json();
+
+    return NextResponse.json({ message: `Actualizado el id ${id}` });
   } catch (error) {
-    console.error(error);
-    return NextResponse.json({ error: "Error al actualizar" }, { status: 500 });
+    return NextResponse.json({ error: "Error interno" }, { status: 500 });
   }
 }
 
-export async function DELETE(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  try {
-    const id = Number(params.id);
-
-    if (isNaN(id)) {
-      return NextResponse.json({ error: "ID inválido" }, { status: 400 });
-    }
-
-    await removeCourseTemplate(id);
-
-    return NextResponse.json(
-      { message: "Template eliminado correctamente" },
-      { status: 200 }
-    );
-  } catch (error) {
-    console.error(error);
-    return NextResponse.json({ error: "Error al eliminar" }, { status: 500 });
-  }
+export async function DELETE(req: NextRequest, context: Context) {
+  const { id } = await context.params;
+  return NextResponse.json({ message: `Borrado ${id}` });
 }

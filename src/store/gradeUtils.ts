@@ -15,7 +15,7 @@ export function computeGroupAverage(
 
   if (values.length === 0) return null;
 
-  if (group.aggregation === "lowest-drop" && values.length > 1) {
+  if (group.aggregation === "LOWEST_DROP" && values.length > 1) {
     const sorted = [...values].sort((a, b) => a - b);
     sorted.shift();
     return sorted.reduce((a, b) => a + b, 0) / sorted.length;
@@ -55,7 +55,7 @@ export function encodeTemplate(template: CourseTemplate): string {
     name: template.name,
     code: template.code,
     groups: template.groups,
-    createdAt: template.createdAt,
+    createAt: template.createAt,
     shareCode: template.shareCode,
   };
   return btoa(encodeURIComponent(JSON.stringify(data)));
@@ -68,15 +68,12 @@ export function decodeTemplate(code: string): CourseTemplate | null {
     return null;
   }
 }
-export function createComponent(
-  type: GradeComponent["type"],
-  index: number
-): GradeComponent {
+export function createComponent(index: number): GradeComponent {
   const labels: Record<string, string> = {
     pc: "PC",
     pd: "PD",
     exam: "Examen",
     custom: "Eval",
   };
-  return { id: uuid(), name: `${labels[type]} ${index + 1}`, type };
+  return { id: Date.now(), name: `exam` };
 }
