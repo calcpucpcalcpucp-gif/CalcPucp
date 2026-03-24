@@ -1,0 +1,45 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum AggregationType {
+  AVERAGE
+  SUM
+  LOWEST_DROP
+}
+
+model GradeComponent {
+  id      Int        @id @default(autoincrement())
+  name    String
+  groupId Int
+  group   GradeGroup @relation(fields: [groupId], references: [id])
+}
+
+model GradeGroup {
+  id          Int              @id @default(autoincrement())
+  name        String
+  weight      Float
+  components  GradeComponent[]
+  tempId      Int
+  template    CourseTemplate   @relation(fields: [tempId], references: [id])
+  aggregation AggregationType
+}
+
+model CourseTemplate {
+  id        Int          @id @default(autoincrement())
+  name      String       @unique
+  code      String       @unique
+  groups    GradeGroup[]
+  createAt  DateTime
+  shareCode String
+}
