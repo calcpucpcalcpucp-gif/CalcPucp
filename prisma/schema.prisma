@@ -42,4 +42,13 @@ model CourseTemplate {
   groups    GradeGroup[]
   createAt  DateTime
   shareCode String
+  adminId   Int
+  admin     Admin        @relation(fields: [adminId], references: [id])
+}
+
+model Admin {
+  id       Int              @id @default(autoincrement())
+  code     String
+  createAt DateTime
+  template CourseTemplate[]
 }

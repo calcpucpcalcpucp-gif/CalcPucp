@@ -27,9 +27,7 @@ export async function createCourseTemplate(data: CourseTemplate) {
       ...data,
       groups: {
         create: data.groups.map((item) => ({
-          name: item.name,
-          weight: item.weight,
-          aggregation: item.aggregation,
+          ...item,
           components: {
             create: item.components,
           },

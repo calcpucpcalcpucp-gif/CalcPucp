@@ -33,8 +33,20 @@ export interface StudentCourse {
   importedAt: number;
 }
 
+export interface Admin {
+  id: string;
+  code: string;
+  createAt: Date;
+  templates: CourseTemplate[];
+}
 export interface AppStore {
-  // Admin: created templates
+  adminCode?: string;
+  setAdminCode: (code?: string) => void;
+
+  // Admin methods: created templates
+
+  adminTemplates: CourseTemplate[];
+
   templates: CourseTemplate[];
   addTemplate: (template: CourseTemplate) => void;
   removeTemplate: (id: number) => void;

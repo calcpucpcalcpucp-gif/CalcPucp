@@ -1,11 +1,12 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useStore } from "@/store/useStore";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, PlusIcon, QrCode, Search } from "lucide-react";
 import { redirect } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Field } from "@/components/ui/field";
+import { BrowserQRCodeReader, IScannerControls } from "@zxing/browser";
 import {
   Item,
   ItemActions,
@@ -14,16 +15,74 @@ import {
   ItemTitle,
 } from "@/components/ui/item";
 import { CourseTemplate } from "@/store/types";
+import { useRouter } from "next/router";
 
-export const ImportForm = () => {
+export default function ImportForm() {
   const importCourse = useStore((s) => s.importCourse);
   const currentCourses = useStore((e) => e.courses);
+  const setAdminCode = useStore((e) => e.setAdminCode);
 
   const [courses, setCourses] = useState<CourseTemplate[]>([]);
   const [searchQuery, setSearch] = useState("");
   const [filteredCourses, setFilteredCourses] = useState<CourseTemplate[]>([]);
 
   const [isOpenQrCapture, setIsOpenQrCapture] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const controlsRef = useRef<IScannerControls | null>(null);
+  const [qrAdminCode, setQrAdminCode] = useState<string | null>(null);
+
+  const router = useRouter();
+  useEffect(() => {
+    if (!isOpenQrCapture || !videoRef.current) return;
+
+    const codeReader = new BrowserQRCodeReader();
+
+    const startScanner = async () => {
+      try {
+        const controls = await codeReader.decodeFromVideoDevice(
+          undefined,
+          videoRef.current!,
+          (result, error) => {
+            if (result) {
+              const scannedText = result.getText();
+              setSearch(scannedText);
+              setIsOpenQrCapture(false);
+              if (scannedText.startsWith("admin:")) {
+                setQrAdminCode(scannedText.replace("admin:", ""));
+              }
+            }
+          }
+        );
+        controlsRef.current = controls;
+      } catch (err) {
+        console.error("Camera access error:", err);
+      }
+    };
+
+    startScanner();
+    return () => {
+      if (controlsRef.current) {
+        controlsRef.current.stop();
+      }
+    };
+  }, [isOpenQrCapture]);
+
+  useEffect(() => {
+    const callbacK = async () => {
+      if (!qrAdminCode) return;
+      const body = await fetch("/api/validAdmin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: qrAdminCode }),
+      });
+      const { ok } = await body.json();
+      if (ok) {
+        setAdminCode(qrAdminCode);
+      }
+    };
+    callbacK();
+    redirect("/craete");
+  }, [qrAdminCode]);
 
   const handleSearch = () => {
     setFilteredCourses(
@@ -34,8 +93,8 @@ export const ImportForm = () => {
         .filter((course) =>
           `${course.name} ${course.code}`
             .toLowerCase()
-            .includes(searchQuery.toLowerCase()),
-        ),
+            .includes(searchQuery.toLowerCase())
+        )
     );
   };
 
@@ -59,13 +118,24 @@ export const ImportForm = () => {
 
   if (isOpenQrCapture) {
     return (
-      <div className="p-6">
+      <div className="fixed inset-0 bg-background z-50 p-6 flex flex-col">
         <button
           onClick={() => setIsOpenQrCapture(false)}
           className="flex items-center gap-1 text-sm text-muted-foreground mb-4"
         >
           <ChevronLeft className="w-4 h-4" /> Volver
         </button>
+
+        <div className="relative flex-1 rounded-xl overflow-hidden bg-black border-2 border-primary">
+          <video ref={videoRef} className="w-full h-full object-cover" />
+          {/* Visual Overlay for the user */}
+          <div className="absolute inset-0 border-[40px] border-black/40 pointer-events-none flex items-center justify-center">
+            <div className="w-64 h-64 border-2 border-white/50 rounded-lg" />
+          </div>
+        </div>
+        <p className="text-center mt-4 text-sm text-muted-foreground">
+          Apunta tu cámara al código QR del curso
+        </p>
       </div>
     );
   }
@@ -116,14 +186,6 @@ export const ImportForm = () => {
           </Item>
         ))}
       </div>
-    </div>
-  );
-};
-
-export default function ImportCourse() {
-  return (
-    <div>
-      <ImportForm />
     </div>
   );
 }

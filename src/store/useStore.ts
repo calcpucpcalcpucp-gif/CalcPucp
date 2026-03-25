@@ -1,3 +1,4 @@
+"use client";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type {
@@ -16,8 +17,12 @@ function initGrades(template: CourseTemplate): StudentGrade[] {
 export const useStore = create<AppStore>()(
   persist(
     (set) => ({
+      adminTemplates: [],
       templates: [],
       courses: [],
+      adminCode: "",
+
+      setAdminCode: (code: string) => set((state) => ({ adminCode: code })),
 
       addTemplate: (template: CourseTemplate) =>
         set((state) => ({ templates: [...state.templates, template] })),
