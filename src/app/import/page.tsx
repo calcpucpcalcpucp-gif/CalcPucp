@@ -1,69 +1,129 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useStore } from "@/store/useStore";
-import { decodeTemplate } from "@/store/gradeUtils";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, Download, CheckCircle2 } from "lucide-react";
-import { toast } from "sonner";
+import { ChevronLeft, PlusIcon, QrCode, Search } from "lucide-react";
 import { redirect } from "next/navigation";
-import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
+import { Field } from "@/components/ui/field";
+import {
+  Item,
+  ItemActions,
+  ItemContent,
+  ItemDescription,
+  ItemTitle,
+} from "@/components/ui/item";
+import { CourseTemplate } from "@/store/types";
 
-export default function ImportCourse() {
+export const ImportForm = () => {
   const importCourse = useStore((s) => s.importCourse);
-  const [code, setCode] = useState("");
+  const currentCourses = useStore((e) => e.courses);
 
-  const handleImport = () => {
-    const trimmed = code.trim();
-    if (!trimmed) {
-      toast.error("Pega el código del curso");
-      return;
-    }
+  const [courses, setCourses] = useState<CourseTemplate[]>([]);
+  const [searchQuery, setSearch] = useState("");
+  const [filteredCourses, setFilteredCourses] = useState<CourseTemplate[]>([]);
 
-    const template = decodeTemplate(trimmed);
-    if (!template) {
-      toast.error("Código inválido. Verifica que esté completo.");
-      return;
-    }
+  const [isOpenQrCapture, setIsOpenQrCapture] = useState(false);
 
-    importCourse(template);
-    toast.success(`"${template.name}" importado correctamente`);
+  const handleSearch = () => {
+    setFilteredCourses(
+      courses
+        .filter((item) => {
+          return !currentCourses.some((currItem) => currItem.id == item.id);
+        })
+        .filter((course) =>
+          `${course.name} ${course.code}`
+            .toLowerCase()
+            .includes(searchQuery.toLowerCase()),
+        ),
+    );
+  };
+
+  const handleAddCourse = (item: CourseTemplate) => {
+    importCourse(item);
     redirect("/home");
   };
 
-  return (
-    <div className="min-h-screen pb-24 px-4 pt-6 max-w-lg mx-auto">
-      <button
-        onClick={() => redirect("/home")}
-        className="flex items-center gap-1 text-sm text-muted-foreground mb-4"
-      >
-        <ChevronLeft className="w-4 h-4" /> Volver
-      </button>
+  useEffect(() => {
+    const callback = async () => {
+      const templates = await fetch("/api/templates");
+      let data = (await templates.json()) as CourseTemplate[];
+      data = data.filter((item) => {
+        return !currentCourses.some((currItem) => currItem.id == item.id);
+      });
+      setCourses(data);
+    };
+    callback();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-      <div className="animate-fade-in">
-        <div className="w-14 h-14 rounded-2xl gradient-primary flex items-center justify-center mb-4">
-          <Download className="w-6 h-6 text-primary-foreground" />
-        </div>
-        <h1 className="text-xl mb-1">Importar Curso</h1>
-        <p className="text-sm text-muted-foreground mb-6">
-          Pega el código que te compartió tu profesor o compañero
-        </p>
-
-        <div className="glass rounded-2xl p-4 mb-4">
-          <Textarea
-            value={code}
-            onChange={(e) => setCode(e.target.value)}
-            placeholder="Pega aquí el código del curso..."
-          />
-        </div>
-
-        <Button
-          onClick={handleImport}
-          className="w-full text-primary-foreground border-0"
-          size="lg"
+  if (isOpenQrCapture) {
+    return (
+      <div className="p-6">
+        <button
+          onClick={() => setIsOpenQrCapture(false)}
+          className="flex items-center gap-1 text-sm text-muted-foreground mb-4"
         >
-          <CheckCircle2 className="w-4 h-4 mr-2" /> Importar Curso
-        </Button>
+          <ChevronLeft className="w-4 h-4" /> Volver
+        </button>
       </div>
+    );
+  }
+
+  return (
+    <div className="max-h-[calc(100vh-3rem)] mx-auto py-5 grid grid-rows-[3rem_1fr]">
+      <Field orientation="horizontal" className="px-3">
+        <form
+          className="flex w-full  gap-2 "
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleSearch();
+          }}
+        >
+          <Input
+            value={searchQuery}
+            type="search"
+            placeholder="Buscar cursos..."
+            onChange={(e) => setSearch(e.target.value)}
+          />
+          <Button variant="outline" className="w-9.75 h-9.75">
+            <Search />
+          </Button>
+        </form>
+        <Button
+          className="w-9.75 h-9.75 flex items-center justify-center  bg-primary p-0"
+          onClick={() => setIsOpenQrCapture(true)}
+        >
+          <QrCode className="min-w-5.75 min-h-5.75 text-white" />
+        </Button>
+      </Field>
+      <div className="overflow-y-auto p-5 space-y-4">
+        {filteredCourses.map((item) => (
+          <Item variant="outline" className="min-w-0" key={item.id}>
+            <ItemContent>
+              <ItemTitle>{item.name}</ItemTitle>
+              <ItemDescription>{item.code}</ItemDescription>
+            </ItemContent>
+            <ItemActions>
+              <Button
+                variant="outline"
+                className="w-10 h-10"
+                onClick={() => handleAddCourse(item)}
+              >
+                <PlusIcon className="min-w-5 min-h-5" />
+              </Button>
+            </ItemActions>
+          </Item>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+export default function ImportCourse() {
+  return (
+    <div>
+      <ImportForm />
     </div>
   );
 }

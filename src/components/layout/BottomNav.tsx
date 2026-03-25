@@ -1,12 +1,11 @@
 "use client";
-import { Home, PlusCircle, Download, BookOpen } from "lucide-react";
+import { Home, PlusCircle, Search, BookOpen } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { usePathname, redirect } from "next/navigation";
 
 const tabs = [
   { path: "/home", icon: Home, label: "Inicio" },
-  { path: "/create", icon: PlusCircle, label: "Crear" },
-  { path: "/import", icon: Download, label: "Importar" },
+  { path: "/import", icon: Search, label: "Buscar" },
 ];
 
 export function BottomNav() {
@@ -25,7 +24,7 @@ export function BottomNav() {
                 "flex flex-col items-center gap-0.5 px-4 py-2 rounded-xl transition-all duration-200",
                 active
                   ? "text-primary scale-105"
-                  : "text-muted-foreground hover:text-foreground"
+                  : "text-muted-foreground hover:text-foreground",
               )}
             >
               <Icon className={cn("w-5 h-5", active && "stroke-[2.5]")} />
