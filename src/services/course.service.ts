@@ -48,7 +48,7 @@ export async function getCourseTemplate(id: number, adminId: number) {
 
 export async function createCourseTemplate(
   data: CourseTemplate,
-  adminId: number,
+  adminId: number
 ) {
   return await prisma.courseTemplate.create({
     data: {
@@ -90,20 +90,33 @@ export async function updateCourseTemplateStructure(data: CourseTemplate) {
       code: data.code,
       shareCode: data.shareCode,
       groups: {
-        update: data.groups.map((group) => ({
-          where: { id: group.id },
-          data: {
+        // Usamos upsert para "Actualizar si existe, Crear si no"
+        upsert: data.groups.map((group) => ({
+          where: { id: group.id && group.id < 100_000_000 ? group.id : 0 }, // Si no hay ID, usamos 0 para forzar la creación
+          create: {
             name: group.name,
             weight: group.weight,
             aggregation: group.aggregation,
-            components: group.components
-              ? {
-                  update: group.components.map((component) => ({
-                    where: { id: component.id },
-                    data: { name: component.name },
-                  })),
-                }
-              : undefined,
+            components: {
+              create:
+                group.components?.map((comp) => ({
+                  name: comp.name,
+                })) || [],
+            },
+          },
+          update: {
+            name: group.name,
+            weight: group.weight,
+            aggregation: group.aggregation,
+            components: {
+              // Upsert también para los componentes dentro de los grupos
+              upsert:
+                group.components?.map((comp) => ({
+                  where: { id: comp.id || 0 },
+                  create: { name: comp.name },
+                  update: { name: comp.name },
+                })) || [],
+            },
           },
         })),
       },

@@ -68,6 +68,7 @@ export function CreateCourseForm({
       shareCode: template?.shareCode ?? uuid(),
     };
     if (edit) {
+      console.log(newTemplate);
       await UpdateCourseTemplateAction(newTemplate);
       toast.success("Curso actualizado exitosamente");
       redirect("/mobile/adminLibrary");
@@ -139,7 +140,7 @@ export function CreateCourseForm({
               "text-xs font-mono",
               Math.abs(totalWeight - 1) > 0.01
                 ? "text-destructive"
-                : "text-success",
+                : "text-success"
             )}
           >
             {(totalWeight * 100).toFixed(0)}%
