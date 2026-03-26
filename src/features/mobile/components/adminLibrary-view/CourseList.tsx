@@ -12,15 +12,19 @@ export const CourseList = ({ templates }: { templates: CourseTemplate[] }) => {
   const handleEdit = (id: number) => {
     redirect(`/mobile/edit/${id}`);
   };
-  return templates.map((item) => (
-    <CourseItem
-      key={item.id}
-      shareCode={item.shareCode}
-      name={item.name}
-      code={item.code}
-      admin
-      onDelete={() => handleDelete(item.id)}
-      onEdit={() => handleEdit(item.id)}
-    />
-  ));
+  return (
+    <div className="space-y-4 overflow-y-auto overflow-x-hidden">
+      {templates.map((item) => (
+        <CourseItem
+          key={item.id}
+          shareCode={item.shareCode}
+          name={item.name}
+          code={item.code}
+          admin
+          onDelete={() => handleDelete(item.id)}
+          onEdit={() => handleEdit(item.id)}
+        />
+      ))}
+    </div>
+  );
 };

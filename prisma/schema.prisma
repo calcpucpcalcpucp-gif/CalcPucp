@@ -22,7 +22,7 @@ model GradeComponent {
   id      Int        @id @default(autoincrement())
   name    String
   groupId Int
-  group   GradeGroup @relation(fields: [groupId], references: [id],onDelete: Cascade)
+  group   GradeGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
 }
 
 model GradeGroup {
@@ -31,24 +31,24 @@ model GradeGroup {
   weight      Float
   components  GradeComponent[]
   tempId      Int
-  template    CourseTemplate   @relation(fields: [tempId], references: [id],onDelete: Cascade)
+  template    CourseTemplate   @relation(fields: [tempId], references: [id], onDelete: Cascade)
   aggregation AggregationType
 }
 
 model CourseTemplate {
   id        Int          @id @default(autoincrement())
   name      String       @unique
-  code      String       @unique
+  code      String
   groups    GradeGroup[]
-  createAt  DateTime @default(now())
-  shareCode String @unique
+  createAt  DateTime     @default(now())
+  shareCode String       @unique
   adminId   Int
-  admin     Admin        @relation(fields: [adminId], references: [id],onDelete: Cascade)
+  admin     Admin        @relation(fields: [adminId], references: [id], onDelete: Cascade)
 }
 
 model Admin {
   id       Int              @id @default(autoincrement())
-  code     String @unique
-  createAt DateTime @default(now())
+  code     String           @unique
+  createAt DateTime         @default(now())
   template CourseTemplate[]
 }

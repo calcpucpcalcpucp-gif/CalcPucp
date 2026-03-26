@@ -67,6 +67,8 @@ export function CreateCourseForm({
       createAt: template?.createAt ?? new Date(),
       shareCode: template?.shareCode ?? uuid(),
     };
+
+    console.log(newTemplate);
     if (edit) {
       console.log(newTemplate);
       await UpdateCourseTemplateAction(newTemplate);
