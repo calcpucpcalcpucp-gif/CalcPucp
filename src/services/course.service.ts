@@ -1,5 +1,5 @@
+import { CourseTemplate } from "@/features/mobile/types/type";
 import prisma from "@/lib/prisma";
-import { CourseTemplate } from "@/store/types";
 
 export async function getCourseTemplates() {
   return await prisma.courseTemplate.findMany({
@@ -7,6 +7,7 @@ export async function getCourseTemplates() {
       id: true,
       name: true,
       code: true,
+      shareCode: true,
       groups: {
         select: {
           name: true,
@@ -21,15 +22,50 @@ export async function getCourseTemplates() {
   });
 }
 
-export async function createCourseTemplate(data: CourseTemplate) {
+export async function getCourseTemplate(id: number, adminId: number) {
+  return await prisma.courseTemplate.findUnique({
+    where: { id, adminId },
+    select: {
+      id: true,
+      name: true,
+      code: true,
+      shareCode: true,
+      createAt: true,
+      groups: {
+        select: {
+          id: true,
+          name: true,
+          weight: true,
+          aggregation: true,
+          components: {
+            select: { id: true, name: true },
+          },
+        },
+      },
+    },
+  });
+}
+
+export async function createCourseTemplate(
+  data: CourseTemplate,
+  adminId: number,
+) {
   return await prisma.courseTemplate.create({
     data: {
-      ...data,
+      adminId: adminId,
+      name: data.name,
+      code: data.code,
+      createAt: data.createAt,
+      shareCode: data.shareCode,
       groups: {
         create: data.groups.map((item) => ({
-          ...item,
+          name: item.name,
+          weight: item.weight,
+          aggregation: item.aggregation,
           components: {
-            create: item.components,
+            create: item.components.map((item) => ({
+              name: item.name,
+            })),
           },
         })),
       },
@@ -80,4 +116,56 @@ export async function updateCourseTemplateStructure(data: CourseTemplate) {
   });
 
   return updatedTemplate;
+}
+
+export async function getCourseTemplateBySharedCode(shareCode: string) {
+  return await prisma.courseTemplate.findUnique({
+    where: { shareCode },
+    select: {
+      id: true,
+      name: true,
+      code: true,
+      shareCode: true,
+      createAt: true,
+      groups: {
+        select: {
+          id: true,
+          name: true,
+          weight: true,
+          aggregation: true,
+          components: {
+            select: { id: true, name: true },
+          },
+        },
+      },
+    },
+  });
+}
+
+export async function getUpdatedCourseTemplates(courseIds: number[]) {
+  return await prisma.courseTemplate.findMany({
+    where: {
+      id: {
+        in: courseIds,
+      },
+    },
+    select: {
+      id: true,
+      name: true,
+      code: true,
+      shareCode: true,
+      createAt: true,
+      groups: {
+        select: {
+          id: true,
+          name: true,
+          weight: true,
+          aggregation: true,
+          components: {
+            select: { id: true, name: true },
+          },
+        },
+      },
+    },
+  });
 }

@@ -3,7 +3,7 @@ import { Geist, Geist_Mono, Inter, Roboto_Slab } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 import { GlobalProvider } from "@/context/GlobalProvider";
-import { BottomNav } from "@/components/layout/BottomNav";
+import { BottomNav } from "@/features/mobile/components/layout-view/BottomNav";
 
 const robotoSlab = Roboto_Slab({
   subsets: ["latin"],
@@ -42,14 +42,11 @@ export default function RootLayout({
         geistMono.variable,
         inter.variable,
         "font-serif",
-        robotoSlab.variable
+        robotoSlab.variable,
       )}
     >
-      <body className="min-h-full flex flex-col">
-        <GlobalProvider>
-          {children}
-          <BottomNav />
-        </GlobalProvider>
+      <body className="min-h-full">
+        <GlobalProvider>{children}</GlobalProvider>
       </body>
     </html>
   );

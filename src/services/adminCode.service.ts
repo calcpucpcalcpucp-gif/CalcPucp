@@ -4,7 +4,7 @@ import { v4 as uuid } from "uuid";
 export async function generateAdminCode() {
   const code = uuid();
 
-  await prisma.adminCode.create({
+  await prisma.admin.create({
     data: {
       code,
       createAt: new Date(),
@@ -14,9 +14,37 @@ export async function generateAdminCode() {
   return code;
 }
 
-export async function validAdminCode(code?: string) {
+export async function findAdmin(code?: string) {
   if (!code) return false;
 
-  const reseult = await prisma.adminCode.findFirst({ where: { code } });
-  return reseult != null;
+  return await prisma.admin.findUnique({
+    where: { code },
+    select: { id: true },
+  });
+}
+
+export async function getAdminCoursesTemplate(id: number) {
+  return await prisma.courseTemplate.findMany({
+    where: {
+      adminId: id,
+    },
+    select: {
+      id: true,
+      name: true,
+      code: true,
+      shareCode: true,
+      createAt: true,
+      groups: {
+        select: {
+          id: true,
+          name: true,
+          weight: true,
+          aggregation: true,
+          components: {
+            select: { id: true, name: true },
+          },
+        },
+      },
+    },
+  });
 }

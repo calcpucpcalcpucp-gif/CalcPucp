@@ -1,189 +1,75 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
-import { useStore } from "@/store/useStore";
-import { Button } from "@/components/ui/button";
-import { ChevronLeft, PlusIcon, QrCode, Search } from "lucide-react";
+import { useState } from "react";
 import { redirect } from "next/navigation";
-import { Input } from "@/components/ui/input";
-import { Field } from "@/components/ui/field";
-import { BrowserQRCodeReader, IScannerControls } from "@zxing/browser";
-import {
-  Item,
-  ItemActions,
-  ItemContent,
-  ItemDescription,
-  ItemTitle,
-} from "@/components/ui/item";
-import { CourseTemplate } from "@/store/types";
-import { useRouter } from "next/router";
+import { CourseTemplate } from "@/features/mobile/types/type";
+import { SearchCourse } from "@/features/mobile/components/import-view/SearchCourse";
+import { useStore } from "@/features/mobile/store/useStore";
+import { CourseItem } from "@/features/mobile/components/import-view/CourseItem";
+import { useLoadCoursesTemplates } from "@/features/mobile/hooks/useLoadTemplates";
+import { QrCapture } from "@/features/mobile/components/import-view/QrCapture";
+import { LoginAction } from "@/actions/authActions";
+import { GetCourseTemplateByShareCodeAction } from "@/actions/courseTemplateAction";
 
 export default function ImportForm() {
-  const importCourse = useStore((s) => s.importCourse);
-  const currentCourses = useStore((e) => e.courses);
-  const setAdminCode = useStore((e) => e.setAdminCode);
+  const { courses, filterCourses } = useLoadCoursesTemplates();
+  const [openQrCapture, setOpenQrCapture] = useState(false);
+  const [query, setQuery] = useState("");
 
-  const [courses, setCourses] = useState<CourseTemplate[]>([]);
-  const [searchQuery, setSearch] = useState("");
-  const [filteredCourses, setFilteredCourses] = useState<CourseTemplate[]>([]);
+  const addCourse = useStore((e) => e.addCourse);
 
-  const [isOpenQrCapture, setIsOpenQrCapture] = useState(false);
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const controlsRef = useRef<IScannerControls | null>(null);
-  const [qrAdminCode, setQrAdminCode] = useState<string | null>(null);
-
-  const router = useRouter();
-  useEffect(() => {
-    if (!isOpenQrCapture || !videoRef.current) return;
-
-    const codeReader = new BrowserQRCodeReader();
-
-    const startScanner = async () => {
-      try {
-        const controls = await codeReader.decodeFromVideoDevice(
-          undefined,
-          videoRef.current!,
-          (result, error) => {
-            if (result) {
-              const scannedText = result.getText();
-              setSearch(scannedText);
-              setIsOpenQrCapture(false);
-              if (scannedText.startsWith("admin:")) {
-                setQrAdminCode(scannedText.replace("admin:", ""));
-              }
-            }
-          }
-        );
-        controlsRef.current = controls;
-      } catch (err) {
-        console.error("Camera access error:", err);
-      }
-    };
-
-    startScanner();
-    return () => {
-      if (controlsRef.current) {
-        controlsRef.current.stop();
-      }
-    };
-  }, [isOpenQrCapture]);
-
-  useEffect(() => {
-    const callbacK = async () => {
-      if (!qrAdminCode) return;
-      const body = await fetch("/api/validAdmin", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ code: qrAdminCode }),
-      });
-      const { ok } = await body.json();
-      if (ok) {
-        setAdminCode(qrAdminCode);
-      }
-    };
-    callbacK();
-    redirect("/craete");
-  }, [qrAdminCode]);
-
-  const handleSearch = () => {
-    setFilteredCourses(
-      courses
-        .filter((item) => {
-          return !currentCourses.some((currItem) => currItem.id == item.id);
-        })
-        .filter((course) =>
-          `${course.name} ${course.code}`
-            .toLowerCase()
-            .includes(searchQuery.toLowerCase())
-        )
-    );
+  const handleSearch = (query: string) => {
+    filterCourses(query);
   };
 
   const handleAddCourse = (item: CourseTemplate) => {
-    importCourse(item);
-    redirect("/home");
+    addCourse(item);
+    redirect("/mobile/home");
   };
 
-  useEffect(() => {
-    const callback = async () => {
-      const templates = await fetch("/api/templates");
-      let data = (await templates.json()) as CourseTemplate[];
-      data = data.filter((item) => {
-        return !currentCourses.some((currItem) => currItem.id == item.id);
-      });
-      setCourses(data);
-    };
-    callback();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const handleOnQr = () => {
+    setOpenQrCapture(true);
+  };
 
-  if (isOpenQrCapture) {
-    return (
-      <div className="fixed inset-0 bg-background z-50 p-6 flex flex-col">
-        <button
-          onClick={() => setIsOpenQrCapture(false)}
-          className="flex items-center gap-1 text-sm text-muted-foreground mb-4"
-        >
-          <ChevronLeft className="w-4 h-4" /> Volver
-        </button>
+  const handleBack = () => {
+    setOpenQrCapture(false);
+  };
 
-        <div className="relative flex-1 rounded-xl overflow-hidden bg-black border-2 border-primary">
-          <video ref={videoRef} className="w-full h-full object-cover" />
-          {/* Visual Overlay for the user */}
-          <div className="absolute inset-0 border-[40px] border-black/40 pointer-events-none flex items-center justify-center">
-            <div className="w-64 h-64 border-2 border-white/50 rounded-lg" />
-          </div>
-        </div>
-        <p className="text-center mt-4 text-sm text-muted-foreground">
-          Apunta tu cámara al código QR del curso
-        </p>
-      </div>
-    );
+  const onCapture = async (text: string) => {
+    setOpenQrCapture(false);
+    if (text.startsWith("share-code:")) {
+      const template = await GetCourseTemplateByShareCodeAction(
+        text.replace("share-code:", ""),
+      );
+      if (template) {
+        addCourse(template);
+        redirect("/mobile/home");
+      }
+    }
+
+    if (text.startsWith("admin:")) {
+      await LoginAction(text.replace("admin:", ""));
+    }
+  };
+
+  if (openQrCapture) {
+    return <QrCapture onBack={handleBack} onCapture={onCapture} />;
   }
 
   return (
     <div className="max-h-[calc(100vh-3rem)] mx-auto py-5 grid grid-rows-[3rem_1fr]">
-      <Field orientation="horizontal" className="px-3">
-        <form
-          className="flex w-full  gap-2 "
-          onSubmit={(e) => {
-            e.preventDefault();
-            handleSearch();
-          }}
-        >
-          <Input
-            value={searchQuery}
-            type="search"
-            placeholder="Buscar cursos..."
-            onChange={(e) => setSearch(e.target.value)}
-          />
-          <Button variant="outline" className="w-9.75 h-9.75">
-            <Search />
-          </Button>
-        </form>
-        <Button
-          className="w-9.75 h-9.75 flex items-center justify-center  bg-primary p-0"
-          onClick={() => setIsOpenQrCapture(true)}
-        >
-          <QrCode className="min-w-5.75 min-h-5.75 text-white" />
-        </Button>
-      </Field>
+      <SearchCourse
+        onSearch={handleSearch}
+        onClickQr={handleOnQr}
+        onChange={setQuery}
+        value={query}
+      />
       <div className="overflow-y-auto p-5 space-y-4">
-        {filteredCourses.map((item) => (
-          <Item variant="outline" className="min-w-0" key={item.id}>
-            <ItemContent>
-              <ItemTitle>{item.name}</ItemTitle>
-              <ItemDescription>{item.code}</ItemDescription>
-            </ItemContent>
-            <ItemActions>
-              <Button
-                variant="outline"
-                className="w-10 h-10"
-                onClick={() => handleAddCourse(item)}
-              >
-                <PlusIcon className="min-w-5 min-h-5" />
-              </Button>
-            </ItemActions>
-          </Item>
+        {courses.map((item) => (
+          <CourseItem
+            {...item}
+            key={item.id}
+            onAdd={() => handleAddCourse(item)}
+          />
         ))}
       </div>
     </div>

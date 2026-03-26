@@ -1,4 +1,4 @@
-import { CourseList } from "../../../components/courses/CourseList";
+import { CoursesList } from "@/features/mobile/components/home-view/CoursesList";
 
 export default function Home() {
   return (
@@ -11,7 +11,7 @@ export default function Home() {
           Registra y calcula tus notas automáticamente
         </p>
       </header>
-      <CourseList />
+      <CoursesList />
     </div>
   );
 }

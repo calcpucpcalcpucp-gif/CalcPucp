@@ -1,5 +1,13 @@
-import { CreateCourseForm } from "../../../components/createCourse/CreateCourseForm";
+import { IsLogedAction } from "@/actions/authActions";
+import { CreateCourseForm } from "@/features/mobile/components/create-view/CreateCourseForm";
+import { redirect } from "next/navigation";
 
-export default function CreateCoursePage() {
+export default async function CreateCoursePage() {
+  const isLogged = await IsLogedAction();
+
+  if (!isLogged) {
+    redirect("/mobile/home");
+  }
+
   return <CreateCourseForm />;
 }

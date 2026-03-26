@@ -9,7 +9,7 @@ export default function NotFound() {
           Oops! Page not found
         </p>
         <Link
-          href={"/home"}
+          href={"/mobile/home"}
           className="text-primary underline hover:text-primary/90"
         >
           Return to Home
