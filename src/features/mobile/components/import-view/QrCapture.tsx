@@ -2,83 +2,80 @@ import { BrowserQRCodeReader, IScannerControls } from "@zxing/browser";
 import { Exception, NotFoundException } from "@zxing/library";
 import { ChevronLeft, Image as ImageIcon } from "lucide-react";
 import { useEffect, useRef } from "react";
+import { toast } from "sonner";
 
 export const QrCapture = ({
   onBack,
   onError,
   onCapture,
+  open,
 }: {
   onBack?: () => void;
   onError?: (e: Exception | unknown) => void;
   onCapture?: (text: string) => void;
+  open: boolean;
 }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const controlsRef = useRef<IScannerControls | null>(null);
   const hasScannedRef = useRef(false);
 
-  const requestPermission = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "environment" },
-      });
-
-      stream.getTracks().forEach((t) => t.stop());
-      return true;
-    } catch (err) {
-      onError?.(err);
-      return false;
-    }
-  };
-
   useEffect(() => {
-    if (!videoRef.current) return;
-
+    let isMounted = true;
+    let controls: IScannerControls | null = null;
     const codeReader = new BrowserQRCodeReader();
 
     const startScanner = async () => {
-      const hasPermission = await requestPermission();
-      if (!hasPermission) return;
-
+      await new Promise((resolve) => setTimeout(resolve, 250));
+      if (!isMounted || !videoRef.current) return;
       try {
-        const controls = await codeReader.decodeFromVideoDevice(
-          undefined,
-          videoRef.current!,
+        const ctrl = await codeReader.decodeFromVideoDevice(
+          undefined, // Cámara trasera por defecto
+          videoRef.current,
           (result, error) => {
-            if (result && !hasScannedRef.current) {
+            if (!isMounted || hasScannedRef.current) return;
+
+            if (result) {
               hasScannedRef.current = true;
-
-              const text = result.getText();
-              if (navigator.vibrate) {
-                navigator.vibrate(100);
-              }
-
-              onCapture?.(text);
-              controlsRef.current?.stop();
+              if (navigator.vibrate) navigator.vibrate(100);
+              onCapture?.(result.getText());
             }
 
             if (error && !(error instanceof NotFoundException)) {
               onError?.(error);
             }
-          },
+          }
         );
 
-        controlsRef.current = controls;
+        if (!isMounted) {
+          ctrl.stop();
+        } else {
+          controls = ctrl;
+          controlsRef.current = ctrl;
+        }
       } catch (err) {
-        onError?.(err);
+        if (isMounted) onError?.(err);
       }
     };
 
     startScanner();
 
     return () => {
-      controlsRef.current?.stop();
+      isMounted = false;
+      // 3. Limpieza absoluta: detenemos tanto la variable local como la Ref
+      if (controls) {
+        controls.stop();
+      }
+      if (controlsRef.current) {
+        controlsRef.current.stop();
+        controlsRef.current = null;
+      }
     };
   }, []);
 
   // Nueva función para manejar la subida de imagen
   const handleFileUpload = async (
-    event: React.ChangeEvent<HTMLInputElement>,
+    event: React.ChangeEvent<HTMLInputElement>
   ) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -102,14 +99,11 @@ export const QrCapture = ({
       }
     } catch (error) {
       if (error instanceof NotFoundException) {
-        // Puedes manejar esto con un toast o una alerta si el QR no se detecta en la imagen
-        console.warn("No se encontró un código QR en la imagen.");
+        toast.warning("No se encontró un código QR en la imagen.");
       }
       onError?.(error);
     } finally {
-      // Limpiamos la URL para evitar fugas de memoria
       URL.revokeObjectURL(imageUrl);
-      // Reseteamos el input por si el usuario quiere subir la misma imagen de nuevo
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
       }
@@ -145,7 +139,12 @@ export const QrCapture = ({
       </div>
 
       <div className="relative flex-1 rounded-xl overflow-hidden bg-black border-2 border-primary">
-        <video ref={videoRef} className="w-full h-full object-cover" />
+        <video
+          ref={videoRef}
+          className="w-full h-full object-cover bg-black"
+          playsInline
+          muted
+        />
         <div className="absolute inset-0 border-40 border-black/40 pointer-events-none flex items-center justify-center">
           <div className="w-64 h-64 border-2 border-white/50 rounded-lg" />
         </div>

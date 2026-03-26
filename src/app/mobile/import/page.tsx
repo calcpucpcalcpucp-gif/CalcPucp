@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { redirect } from "next/navigation";
+import { redirect, useRouter } from "next/navigation";
 import { CourseTemplate } from "@/features/mobile/types/type";
 import { SearchCourse } from "@/features/mobile/components/import-view/SearchCourse";
 import { useStore } from "@/features/mobile/store/useStore";
@@ -11,6 +11,7 @@ import { LoginAction } from "@/actions/authActions";
 import { GetCourseTemplateByShareCodeAction } from "@/actions/courseTemplateAction";
 
 export default function ImportForm() {
+  const router = useRouter();
   const { courses, filterCourses } = useLoadCoursesTemplates();
   const [openQrCapture, setOpenQrCapture] = useState(false);
   const [query, setQuery] = useState("");
@@ -38,11 +39,11 @@ export default function ImportForm() {
     setOpenQrCapture(false);
     if (text.startsWith("share-code:")) {
       const template = await GetCourseTemplateByShareCodeAction(
-        text.replace("share-code:", ""),
+        text.replace("share-code:", "")
       );
       if (template) {
         addCourse(template);
-        redirect("/mobile/home");
+        router.replace("/mobile/home");
       }
     }
 
@@ -52,7 +53,13 @@ export default function ImportForm() {
   };
 
   if (openQrCapture) {
-    return <QrCapture onBack={handleBack} onCapture={onCapture} />;
+    return (
+      <QrCapture
+        onBack={handleBack}
+        onCapture={onCapture}
+        open={openQrCapture}
+      />
+    );
   }
 
   return (

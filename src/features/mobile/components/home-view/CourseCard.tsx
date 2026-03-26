@@ -48,7 +48,7 @@ export function CourseCard({ course, onRemove, index }: CourseCardProps) {
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
+        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all max-sm:opacity-100">
           <button
             title="Ver código QR"
             onClick={(e) => {
@@ -89,7 +89,7 @@ export function CourseCard({ course, onRemove, index }: CourseCardProps) {
           <span
             className={cn(
               "font-display text-2xl font-bold",
-              getGradeColor(finalGrade),
+              getGradeColor(finalGrade)
             )}
           >
             {finalGrade.toFixed(1)}

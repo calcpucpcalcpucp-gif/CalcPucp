@@ -7,16 +7,16 @@ import {
 
 export function initGrades(template: CourseTemplate): StudentGrade[] {
   return template.groups.flatMap((g) =>
-    g.components.map((c) => ({ componentId: c.id, value: null })),
+    g.components.map((c) => ({ componentId: c.id, value: null }))
   );
 }
 
 export function computeGroupAverage(
   group: GradeGroup,
-  grades: StudentGrade[],
+  grades: StudentGrade[]
 ): number | null {
   const values = group.components
-    .map((c) => grades.find((g) => g.componentId === c.id)?.value)
+    .map((c) => grades.find((g) => g.componentId === c.id)?.value ?? 0)
     .filter((v): v is number => v !== null);
 
   if (values.length === 0) return null;
@@ -32,7 +32,7 @@ export function computeGroupAverage(
 
 export function computeFinalGrade(
   template: CourseTemplate,
-  grades: StudentGrade[],
+  grades: StudentGrade[]
 ): number | null {
   let total = 0;
   let weightSum = 0;
