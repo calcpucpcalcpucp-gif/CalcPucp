@@ -1,9 +1,7 @@
 "use client";
 import { Home, LibraryBig, PlusCircle, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { usePathname, redirect } from "next/navigation";
-import { useStore } from "../../store/useStore";
-
+import { usePathname, redirect, useRouter } from "next/navigation";
 const tabs = [
   { path: "/mobile/home", icon: Home, label: "Inicio", admin: false },
   { path: "/mobile/import", icon: Search, label: "Buscar", admin: false },
@@ -17,6 +15,7 @@ const tabs = [
 ];
 
 export function BottomNav({ isAdmin }: { isAdmin?: boolean }) {
+  const router = useRouter();
   const location = usePathname();
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 glass safe-bottom border-t border-border/60">
@@ -28,12 +27,12 @@ export function BottomNav({ isAdmin }: { isAdmin?: boolean }) {
             return (
               <button
                 key={path}
-                onClick={() => redirect(path)}
+                onClick={() => router.replace(path)}
                 className={cn(
                   "flex flex-col items-center gap-0.5 px-4 py-2 rounded-xl transition-all duration-200",
                   active
                     ? "text-primary scale-105"
-                    : "text-muted-foreground hover:text-foreground",
+                    : "text-muted-foreground hover:text-foreground"
                 )}
               >
                 <Icon className={cn("w-5 h-5", active && "stroke-[2.5]")} />
