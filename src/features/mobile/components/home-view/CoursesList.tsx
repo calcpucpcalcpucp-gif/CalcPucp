@@ -10,13 +10,10 @@ export const CoursesList = () => {
   const { courses, removeCourse, updateTemplates } = useStore();
 
   useEffect(() => {
-    // Si no hay cursos, no hacemos ninguna petición
     if (courses.length === 0) return;
 
     const syncCourses = async () => {
       try {
-        // Extraemos los IDs de las plantillas actuales en el dispositivo
-        // Usamos Set para evitar enviar IDs duplicados si por algún motivo tienes la misma plantilla varias veces
         const templateIds = Array.from(
           new Set(courses.map((c) => c.template.id)),
         );
