@@ -10,7 +10,7 @@ export default async function Page() {
 
   return (
     <div className="max-h-[calc(100vh-3rem)] mx-auto py-5 grid grid-rows-[5rem_1fr]">
-      <header className="mb-8 animate-fade-in ml-10">
+      <header className="mb-8 animate-fade-in ml-8">
         <div className="flex items-center gap-3 mb-1">
           <h1 className="text-2xl">Mis Cursos</h1>
         </div>
@@ -18,7 +18,7 @@ export default async function Page() {
           Registra y calcula tus notas automáticamente
         </p>
       </header>
-      <div className="px-10">
+      <div className="px-8">
         <CourseList templates={templates} />
       </div>
     </div>
