@@ -51,6 +51,7 @@ export const CourseGroup = ({
         <div className="flex items-center gap-1">
           <Input
             type="number"
+            inputMode="decimal"
             value={(group.weight * 100).toString()}
             onChange={(e) =>
               updateGroup(group.id, {

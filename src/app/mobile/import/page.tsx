@@ -6,9 +6,20 @@ import { SearchCourse } from "@/features/mobile/components/import-view/SearchCou
 import { useStore } from "@/features/mobile/store/useStore";
 import { CourseItem } from "@/features/mobile/components/import-view/CourseItem";
 import { useLoadCoursesTemplates } from "@/features/mobile/hooks/useLoadTemplates";
-import { QrCapture } from "@/features/mobile/components/import-view/QrCapture";
 import { LoginAction } from "@/actions/authActions";
 import { GetCourseTemplateByShareCodeAction } from "@/actions/courseTemplateAction";
+import dynamic from "next/dynamic";
+
+const QrCapture = dynamic(
+  () =>
+    import("@/features/mobile/components/import-view/QrCapture").then(
+      (mod) => mod.QrCapture,
+    ),
+  {
+    ssr: false,
+    loading: () => <div className="p-4 text-center">Preparando cámara...</div>,
+  },
+);
 
 export default function ImportForm() {
   const router = useRouter();
@@ -39,7 +50,7 @@ export default function ImportForm() {
     setOpenQrCapture(false);
     if (text.startsWith("share-code:")) {
       const template = await GetCourseTemplateByShareCodeAction(
-        text.replace("share-code:", "")
+        text.replace("share-code:", ""),
       );
       if (template) {
         addCourse(template);
