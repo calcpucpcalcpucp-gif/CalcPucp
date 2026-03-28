@@ -6,7 +6,7 @@ const withPWA = withPWAInit({
   cacheOnFrontEndNav: true,
   aggressiveFrontEndNavCaching: true,
   reloadOnOnline: true,
-  disable: process.env.NODE_ENV === "development",
+  disable: false,
   workboxOptions: {
     runtimeCaching: [
       {
@@ -42,6 +42,14 @@ const withPWA = withPWAInit({
           expiration: { maxEntries: 10, maxAgeSeconds: 60 * 60 * 24 },
         },
       },
+      {
+        urlPattern: ({ request }) => request.mode === "navigate",
+        handler: "StaleWhileRevalidate",
+        options: {
+          cacheName: "pages-cache",
+          expiration: { maxEntries: 40 },
+        },
+      },
     ],
     disableDevLogs: true,
   },
@@ -50,7 +58,7 @@ const withPWA = withPWAInit({
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   allowedDevOrigins: ["localhost:3000", "*.ngrok-free.app"],
-  turbopack: {},
+  // turbopack: {},
 };
 
 export default withPWA({ ...nextConfig });

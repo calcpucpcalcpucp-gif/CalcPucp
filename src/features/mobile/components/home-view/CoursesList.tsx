@@ -10,25 +10,22 @@ export const CoursesList = () => {
   const router = useRouter();
   const { courses, removeCourse, updateTemplates } = useStore();
 
-  // Referencia para guardar los IDs sincronizados y evitar el bucle
   const lastSyncedIds = useRef<string>("");
 
   useEffect(() => {
     if (courses.length === 0) return;
 
-    // Creamos una "huella digital" de los cursos actuales basada en sus IDs
     const currentIdsKey = courses
       .map((c) => c.template.id)
       .sort()
       .join(",");
 
-    // Si los IDs no han cambiado desde la última sincronización, no hacemos nada
     if (lastSyncedIds.current === currentIdsKey) return;
 
     const syncCourses = async () => {
       try {
         const templateIds = Array.from(
-          new Set(courses.map((c) => c.template.id))
+          new Set(courses.map((c) => c.template.id)),
         );
 
         const response = await fetch("/api/updateTemplates", {
@@ -40,9 +37,7 @@ export const CoursesList = () => {
         if (!response.ok) throw new Error("Error al sincronizar");
 
         const updatedTemplates = await response.json();
-        console.log(updatedTemplates);
 
-        // Actualizamos la referencia ANTES de actualizar el store
         lastSyncedIds.current = currentIdsKey;
 
         updateTemplates(updatedTemplates);
@@ -52,7 +47,7 @@ export const CoursesList = () => {
     };
 
     syncCourses();
-  }, [courses, updateTemplates]); // Añadimos dependencias estables
+  }, [courses, updateTemplates]);
 
   return (
     <>
