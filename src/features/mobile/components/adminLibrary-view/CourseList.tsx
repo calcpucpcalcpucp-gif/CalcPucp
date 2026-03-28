@@ -4,7 +4,11 @@ import { CourseItem } from "@/features/mobile/components/import-view/CourseItem"
 import { CourseTemplate } from "@/features/mobile/types/type";
 import { redirect } from "next/navigation";
 import { toast } from "sonner";
-export const CourseList = ({ templates }: { templates: CourseTemplate[] }) => {
+export const CourseList = ({
+  templates,
+}: {
+  templates: Omit<CourseTemplate, "groups">[];
+}) => {
   const handleDelete = async (id: number) => {
     await RemoveCourseTemplateAction(id);
     toast.success("Se elimino el curso  exitosamente");

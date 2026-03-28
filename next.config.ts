@@ -6,21 +6,22 @@ const withPWA = withPWAInit({
   cacheOnFrontEndNav: true,
   aggressiveFrontEndNavCaching: true,
   reloadOnOnline: true,
-  disable: false,
+  // Cambia a true en desarrollo para no tener problemas de caché al programar
+  disable: process.env.NODE_ENV === "development",
   workboxOptions: {
+    disableDevLogs: true,
     runtimeCaching: [
       {
+        // 1. PÁGINAS PÚBLICAS: Carga instantánea (StaleWhileRevalidate)
         urlPattern: /\/mobile\/(home|import|course\/.*)/i,
         handler: "StaleWhileRevalidate",
         options: {
           cacheName: "public-pages-cache",
-          expiration: {
-            maxEntries: 20,
-            maxAgeSeconds: 60 * 60 * 24 * 30, // 30 días
-          },
+          expiration: { maxEntries: 20, maxAgeSeconds: 60 * 60 * 24 * 30 },
         },
       },
       {
+        // 2. RECURSOS ESTÁTICOS: CacheFirst (Máxima velocidad)
         urlPattern: /\.(?:js|css|woff2?|png|svg|json)$/i,
         handler: "CacheFirst",
         options: {
@@ -29,20 +30,28 @@ const withPWA = withPWAInit({
         },
       },
       {
+        // 3. RUTAS ADMIN: NetworkFirst (Intenta red, si falla usa caché)
+        // Eliminamos el bloque "NetworkOnly" que tenías antes para que este funcione
         urlPattern:
           /\/(admin|mobile\/adminLibrary|mobile\/create|mobile\/edit\/.*)/i,
-        handler: "NetworkOnly",
+        handler: "NetworkFirst",
+        options: {
+          cacheName: "admin-pages-cache",
+          networkTimeoutSeconds: 3, // Si la red tarda más de 3s, usa el caché
+          expiration: { maxEntries: 15 },
+        },
       },
       {
+        // 4. API DATA: NetworkFirst para sincronizar con Prisma
         urlPattern: /\/api\/(templates|updateTemplates)/i,
         handler: "NetworkFirst",
         options: {
           cacheName: "api-data-cache",
-          networkTimeoutSeconds: 5,
           expiration: { maxEntries: 10, maxAgeSeconds: 60 * 60 * 24 },
         },
       },
       {
+        // 5. NAVEGACIÓN GENERAL
         urlPattern: ({ request }) => request.mode === "navigate",
         handler: "StaleWhileRevalidate",
         options: {
@@ -51,14 +60,12 @@ const withPWA = withPWAInit({
         },
       },
     ],
-    disableDevLogs: true,
   },
 });
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   allowedDevOrigins: ["localhost:3000", "*.ngrok-free.app"],
-  // turbopack: {},
 };
 
 export default withPWA({ ...nextConfig });

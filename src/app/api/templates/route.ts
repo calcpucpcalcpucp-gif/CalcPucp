@@ -1,9 +1,5 @@
 import { NextResponse } from "next/server";
-import {
-  createCourseTemplate,
-  getCourseTemplates,
-} from "@/services/course.service";
-import { findAdmin } from "@/services/adminCode.service";
+import { getCourseTemplates } from "@/services/course.service";
 
 export async function GET() {
   try {

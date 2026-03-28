@@ -25,26 +25,13 @@ export async function findAdmin(code?: string) {
 
 export async function getAdminCoursesTemplate(id: number) {
   return await prisma.courseTemplate.findMany({
-    where: {
-      adminId: id,
-    },
+    where: { adminId: id },
     select: {
       id: true,
       name: true,
       code: true,
       shareCode: true,
       createAt: true,
-      groups: {
-        select: {
-          id: true,
-          name: true,
-          weight: true,
-          aggregation: true,
-          components: {
-            select: { id: true, name: true },
-          },
-        },
-      },
     },
   });
 }
