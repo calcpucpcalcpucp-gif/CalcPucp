@@ -11,7 +11,7 @@ export default function Home() {
           Registra y calcula tus notas automáticamente
         </p>
       </header>
-      <div className="px-8">
+      <div className="px-8 min-h-0 overflow-y-auto  pb-6">
         <CoursesList />
       </div>
     </div>
